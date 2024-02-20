@@ -11,7 +11,11 @@ A Rust library to run Python scripts and install dependencies within a given env
 
 ## Installation
 
-This library requires no dependencies and is not on crates.io (yet), and as such the easiest method is to just copy the `lib.rs` file into your project, rename it to `py_env.rs` or some other name, and import it from your code.
+Simply add the library as a dependency in your Cargo.toml as follows, and invoke via the [usage instructions](#usage).
+```
+[dependencies]
+py_env = "1.0.0"
+```
 
 ## Usage
 
