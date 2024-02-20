@@ -12,7 +12,7 @@ A Rust library to run Python scripts and install dependencies within a given env
 ## Installation
 
 Simply add the library as a dependency in your Cargo.toml as follows, and invoke via the [usage instructions](#usage).
-```
+```toml
 [dependencies]
 py_env = "1.0.0"
 ```
