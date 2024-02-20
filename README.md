@@ -1,6 +1,6 @@
 # py_shell
 
-**[Short, memorable description of your project]**
+A Rust library to run Python scripts and install dependencies within a given environment path.
 
 ## Table of Contents
 
@@ -8,36 +8,48 @@
 * [Usage](#usage)
 * [Contributing](#contributing)
 * [License](#license)
-* [Additional Information](#additional-information)
 
 ## Installation
 
-**Clearly describe how to install your project.** This may involve specifying dependencies, prerequisites, and build instructions. Use code blocks, links, and step-by-step guides for clarity.
+This library requires no dependencies and is not on crates.io, and as such the easiest method is to just copy the `lib.rs` file into your project, rename it to `py_shell.rs` or some other name, and import it from your code.
 
 ## Usage
 
-**Provide clear and concise instructions on how to use your project.** Explain its functionalities, features, and common use cases. Include examples, screenshots, or GIFs if helpful.
+### Creating a Python Environment
 
-**Tips:**
+This library uses a very simple syntax to run Python scripts. To create a Python environment, simply run `PyEnv::at(PathBuf)`.
 
-* Break down instructions into logical steps.
-* Use bullet points for succinct explanations.
-* Consider creating a separate "Getting Started" guide for beginners.
+```rust
+let path = "./py_test";
+let path = std::path::PathBuf::from(path);
+let env = PyEnv::at(path);
+```
+
+### Running Arbitrary Code
+
+```rust
+let path = "./py_test";
+let path = std::path::PathBuf::from(path);
+PyEnv::at(path)
+    .execute("print('hello world')");
+```
+
+### Installing Python Dependencies
+
+The following code installs numpy into the `./py_test` directory's site-packages and uses it in executed code.
+
+```rust
+let path = "./py_test";
+let path = std::path::PathBuf::from(path);
+PyEnv::at(path)
+    .install("numpy");
+    .execute("a = np.arange(15).reshape(3, 5); print(a.shape)");
+```
 
 ## Contributing
 
-**Outline your contribution guidelines.** Explain how users can contribute to your project, whether through code, bug reports, or documentation improvements. Specify preferred code style, pull request format, and testing procedures.
+This was made as a code bounty, and as such is not a maintained project, but PRs are always welcome and will be reviewed when I see them.
 
 ## License
 
-**Specify the license under which your project is distributed.** Use clear and concise language, and link to the full license text in the `LICENSE` file.
-
-## Additional Information
-
-**Include any other relevant information you want to share.** This could be links to related projects, documentation, support channels, or your contact information.
-
-**Remember:**
-
-* Keep your README.md file concise and focused.
-* Use clear headings, formatting, and visuals for readability.
-* Update your README.md file regularly to reflect changes in your project.
+This code is licensed under the [MIT License](https://github.com/uptudev/py_shell/blob/main/LICENSE).
