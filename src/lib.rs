@@ -94,6 +94,34 @@ impl PyEnv {
         )?;
         Ok(&self)
     }
+
+    // Panicking here should only happen upon failure to spawn or await the shell commands (code 
+    // execution failure returns `Ok(false)`). The implication of that is that these wrappers 
+    // should only panic upon being unable to execute commands in general, which is undefined 
+    // behaviour in the context of this lib.
+    //
+    // As such these wrappers will work for non-release code generally, but should be swapped
+    // for the PyResult versions in production code for proper error handling; it's just not
+    // necessary to do so for 99.9% of use cases.
+
+    /// An unwrapped `install()` run, which panics upon failure. See `install()` for the version
+    /// which returns a PyResult.
+    pub fn try_install(&self, package_name: &str) -> &Self {
+        self.stream_command(std::process::Command::new("python")
+            .args([
+                "-m", 
+                "pip", 
+                "install",
+                package_name,
+                "--target",
+                self.path
+                    .join("site-packages")
+                    .as_os_str()
+                    .to_str()
+                    .expect("Invalid path")])
+            ).unwrap();
+        &self
+    }
     
     /// Executes arbitrary code in the PyEnv, returning itself to easily chain runs.
     pub fn execute(&self, code: &str) -> PyResult<&Self> {
@@ -103,6 +131,17 @@ impl PyEnv {
             .args(["-c", code])
         )?;
         Ok(&self)
+    }
+
+    /// An unwrapped `execute()` run, which panics upon failure. See `execute()` for the version
+    /// which returns a PyResult.
+    pub fn try_execute(&self, code: &str) -> &Self {
+        std::env::set_var("PYTHONPATH", self.path.join("site-packages"));
+        self.stream_command(
+            std::process::Command::new("python")
+            .args(["-c", code])
+        ).expect("Error executing code");
+        &self
     }
 
     /// Makes the environment impersistent beyond the PyEnv, deleting it upon dropping
@@ -144,5 +183,21 @@ mod tests {
             .persistent(false)
             .install("faker")?;
         Ok(())
+    }
+
+    #[test]
+    fn test_unwrapped_funcs() {
+        PyEnv::at("./py_test/unwrapped_funcs")
+            .try_install("faker")
+            .try_execute("import faker; print(faker.Faker().name())");
+    }
+
+    #[test]
+    fn test_fail_unwrapped_funcs() {
+        // Failure here doesn't panic; not really sure how to make it panic intentionally yet
+        // TODO: Add a #[should_panic] attribute and make this try wrapper panic for the test
+        PyEnv::at("./py_test/unwrapped_funcs")
+            .try_install(". .'] / .")
+            .try_execute("qb  fesaf af vv");
     }
 }
