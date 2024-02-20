@@ -1,7 +1,9 @@
+#![doc = include_str!("../README.md")]
+
 use std::io::{stdout, stderr, Stdout, Stderr};
 use std::path::PathBuf;
 
-// pandora's box of self-mutating code
+/// A Python environment that can install packages and execute code.
 pub struct PyEnv {
     path: PathBuf,
     std_out: Box<dyn Fn() -> Stdout>,
@@ -12,20 +14,23 @@ pub struct PyEnv {
 impl Drop for PyEnv {
     fn drop(&mut self) {
         if !self.persistent {
-            std::fs::remove_dir_all(&self.path).unwrap();
+            if let Err(e) = std::fs::remove_dir_all(&self.path) {
+                eprintln!("Error deleting PyEnv at {}, cause: {}", self.path.display(), e);
+            }
         }
     }
 }
 
 impl PyEnv {
-    // Constructor for piping stdout and stderr to a custom stream.
-    // Use `at()` if you want to inherit the streams.
+    /// Constructor for piping stdout and stderr to a custom stream.
+    /// Use `at()` if you want to inherit the streams.
     pub fn new(
         path: PathBuf, 
         std_out: Box<dyn Fn() -> Stdout>,
         std_err: Box<dyn Fn() -> Stderr>,
     ) -> Self {
-        Self {path, std_out, std_err, persistent: true}
+        let persistent = true;
+        Self { path, std_out, std_err, persistent }
     }
 
     /// Constructor inheriting default stdout and stderr; use `new()` to customize the streams.
@@ -60,10 +65,7 @@ impl PyEnv {
     pub fn execute(&self, code: &str) -> &Self {
         std::env::set_var("PYTHONPATH", self.path.join("site-packages"));
         let mut handle = std::process::Command::new("python")
-            .args([
-                "-c",
-                code
-            ])
+            .args(["-c", code])
             .stdout((self.std_out)())
             .stderr((self.std_err)())
             .spawn()
@@ -73,14 +75,8 @@ impl PyEnv {
     }
 
     /// Makes the environment impersistent beyond the PyEnv, deleting it upon dropping
-    pub fn make_impersistent(&mut self) -> &Self {
-        self.persistent = false;
-        self
-    }
-
-    /// Makes the environment persistent beyond the PyEnv, keeping it upon dropping (default)
-    pub fn make_persistent(&mut self) -> &Self {
-        self.persistent = true;
+    pub fn persistent(&mut self, persistent: bool) -> &Self {
+        self.persistent = persistent;
         self
     }
 }
@@ -88,31 +84,30 @@ impl PyEnv {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const DIR: &'static str = "./py_test";
 
     #[test]
     fn test_install() {
-        PyEnv::at(DIR)
+        PyEnv::at("./py_test/install")
             .install("faker");
     }
 
     #[test]
     fn test_run() {
-        PyEnv::at(DIR)
+        PyEnv::at("./py_test/run")
             .execute("print('hello world')");
     }
 
     #[test]
     fn test_install_run() {
-        PyEnv::at(DIR)
+        PyEnv::at("./py_test/install_run")
             .install("faker")
             .execute("import faker; print(faker.Faker().name())");
     }
 
     #[test]
     fn test_impersistence() {
-        PyEnv::at(DIR)
-            .make_impersistent()
+        PyEnv::at("./py_test/impersistence")
+            .persistent(false)
             .install("faker");
     }
 }
