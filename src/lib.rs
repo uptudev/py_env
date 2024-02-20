@@ -1,6 +1,5 @@
 #![doc = include_str!("../README.md")]
 
-use std::io::{stdout, stderr, Stdout, Stderr};
 use std::path::PathBuf;
 
 /// Error type.
@@ -12,8 +11,8 @@ pub type PyResult<T> = Result<T, Box<dyn std::error::Error>>;
 /// A Python environment that can install packages and execute code.
 pub struct PyEnv {
     path: PathBuf,
-    std_out: Box<dyn Fn() -> Stdout>,
-    std_err: Box<dyn Fn() -> Stderr>,
+    std_out: Box<dyn Fn(&str)>,
+    std_err: Box<dyn Fn(&str)>,
     persistent: bool,
 } 
 
@@ -32,22 +31,55 @@ impl PyEnv {
     /// Use `at()` if you want to inherit the streams.
     pub fn new(
         path: impl Into<PathBuf>, 
-        std_out: Box<dyn Fn() -> Stdout>,
-        std_err: Box<dyn Fn() -> Stderr>,
+        std_out: impl Fn(&str) + 'static,
+        std_err: impl Fn(&str) + 'static,
     ) -> Self {
         let path = path.into();
         let persistent = true;
+        let std_out = Box::new(std_out) as Box<dyn Fn(&str)>;
+        let std_err = Box::new(std_err) as Box<dyn Fn(&str)>;
         Self { path, std_out, std_err, persistent }
     }
 
     /// Constructor inheriting default stdout and stderr; use `new()` to customize the streams.
     pub fn at(path: impl Into<PathBuf>) -> Self {
-        Self::new(path, Box::new(stdout), Box::new(stderr))
+        let std_out = |line: &str| println!("{}", line);
+        let std_err = |line: &str| eprintln!("{}", line);
+        Self::new(path, std_out, std_err)
+    }
+
+    fn stream_command(&self, command: &mut std::process::Command) -> Result<bool, Box<dyn std::error::Error>> {
+        use std::io::{BufReader, BufRead};
+
+        let mut command = command
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()?;
+
+        command.stdout.as_mut().map(|stdout| {
+            let reader = BufReader::new(stdout);
+            reader.lines().for_each(|line| {
+                if let Ok(line) = line {
+                    (self.std_out)(&line);
+                }
+            });
+        });
+        command.stderr.as_mut().map(|stderr| {
+            let reader = BufReader::new(stderr);
+            reader.lines().for_each(|line| {
+                if let Ok(line) = line {
+                    (self.std_err)(&line);
+                }
+            });
+        });
+
+        let status = command.wait()?;
+        Ok(status.success())
     }
 
     /// Installs a package in the PyEnv, returning itself to easily chain dependencies.
     pub fn install(&self, package_name: &str) -> PyResult<&Self> {
-        let mut handle = std::process::Command::new("python")
+        self.stream_command(std::process::Command::new("python")
             .args([
                 "-m", 
                 "pip", 
@@ -59,22 +91,17 @@ impl PyEnv {
                     .as_os_str()
                     .to_str()
                     .ok_or("Invalid path")?])
-            .stdout((self.std_out)())
-            .stderr((self.std_err)())
-            .spawn()?;
-        handle.wait()?;
+        )?;
         Ok(&self)
     }
     
     /// Executes arbitrary code in the PyEnv, returning itself to easily chain runs.
     pub fn execute(&self, code: &str) -> PyResult<&Self> {
         std::env::set_var("PYTHONPATH", self.path.join("site-packages"));
-        let mut handle = std::process::Command::new("python")
+        self.stream_command(
+            std::process::Command::new("python")
             .args(["-c", code])
-            .stdout((self.std_out)())
-            .stderr((self.std_err)())
-            .spawn()?;
-        handle.wait()?;
+        )?;
         Ok(&self)
     }
 
