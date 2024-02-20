@@ -21,7 +21,6 @@ This library uses a very simple syntax to run Python scripts. To create a Python
 
 ```rust
 let path = "./py_test";
-let path = std::path::PathBuf::from(path);
 let env = PyEnv::at(path);
 ```
 
@@ -29,7 +28,6 @@ let env = PyEnv::at(path);
 
 ```rust
 let path = "./py_test";
-let path = std::path::PathBuf::from(path);
 PyEnv::at(path)
     .execute("print('hello world')");
 ```
@@ -40,7 +38,6 @@ The following code installs numpy into the `./py_test` directory's site-packages
 
 ```rust
 let path = "./py_test";
-let path = std::path::PathBuf::from(path);
 PyEnv::at(path)
     .install("numpy");
     .execute("a = np.arange(15).reshape(3, 5); print(a.shape)");

@@ -20,7 +20,8 @@ impl PyEnv {
     }
 
     /// Constructor inheriting default stdout and stderr; use `new()` to customize the streams.
-    pub fn at(path: PathBuf) -> Self {
+    pub fn at(path: &str) -> Self {
+        let path = PathBuf::from(path);
         Self::new(path, Box::new(stdout), Box::new(stderr))
     }
 
@@ -69,19 +70,19 @@ mod tests {
 
     #[test]
     fn test_install() {
-        PyEnv::at(PathBuf::from(DIR))
+        PyEnv::at(DIR)
         .install("faker");
     }
 
     #[test]
     fn test_run() {
-        PyEnv::at(PathBuf::from(DIR))
+        PyEnv::at(DIR)
         .execute("print('hello world')");
     }
 
     #[test]
     fn test_install_run() {
-        PyEnv::at(PathBuf::from(DIR))
+        PyEnv::at(DIR)
         .install("faker")
         .execute("import faker; print(faker.Faker().name())");
     }
