@@ -65,9 +65,22 @@ PyEnv::at("./py_test")
     .install("numpy").expect("Failed to install numpy");
 ```
 
+### Using the `try_` Unwrappers
+
+The `try_install()` and `try_execute()` unwrapper functions panic upon errors being returned from their inner `install()` and `execute()` functions, which fail only if there is an error spawning the Python commands needed to run or upon waiting for them to finish running. Given that should only really happen if you don't have Python installed, we have provided these functions for convenience, but warn against their use in production code over handling the errors manually.
+
+```rust
+use py_env::PyEnv;
+
+PyEnv::at("./py_test")
+    .persistent(false)
+    .try_install("numpy")
+    .try_execute("a = numpy.arange(15).reshape(3, 5); print(a.shape)");
+```
+
 ## Contributing
 
-This was made as a code bounty, and as such is not a maintained project, but PRs are always welcome and will be reviewed when I see them.
+PRs are always welcome and will be reviewed when I see them. Code is released under the MIT License ([see below](#license)), and as such forking this repo to add features you'd like to see implemented would be greatly appreciated.
 
 ## License
 
