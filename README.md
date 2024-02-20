@@ -9,6 +9,10 @@ A Rust library to run Python scripts and install dependencies within a given env
 * [Contributing](#contributing)
 * [License](#license)
 
+## Installation
+
+This library requires no dependencies and is not on crates.io (yet), and as such the easiest method is to just copy the `lib.rs` file into your project, rename it to `py_shell.rs` or some other name, and import it from your code.
+
 ## Usage
 
 ### Creating a Python Environment
