@@ -1,10 +1,10 @@
 [package]
-name = "py_shell"
+name = "py_env"
 version = "1.0.0"
 authors = ["uptu <uptu@uptudev>", "notdanilo <danguafer@gmail.com>"]
 edition = "2021"
 description = "A wrapper for Python commands to easily install dependencies and run Python scripts in an optionally impersistent environment."
 readme = "README.md"
-repository = "https://github.com/uptudev/py_shell/"
+repository = "https://github.com/uptudev/py_env/"
 license-file = "LICENSE"
 keywords = ["python", "pip", "environment"]

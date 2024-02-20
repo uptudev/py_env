@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "py_shell"
+name = "py_env"
 version = "1.0.0"
