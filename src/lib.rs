@@ -43,9 +43,9 @@ impl PyEnv {
 
     /// Constructor inheriting default stdout and stderr; use `new()` to customize the streams.
     pub fn at(path: impl Into<PathBuf>) -> Self {
-        let std_out = |line: &str| std::io::stdout().write_all(line.as_bytes())
+        let std_out = |line: &str| std::io::stdout().write_all((line.to_string() + "\n").as_bytes())
             .expect("Error writing line to stdout");
-        let std_err = |line: &str| std::io::stdout().write_all(line.as_bytes())
+        let std_err = |line: &str| std::io::stdout().write_all((line.to_string() + "\n").as_bytes())
             .expect("Error writing line to stderr");
         Self::new(path, std_out, std_err)
     }
