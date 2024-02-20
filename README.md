@@ -31,7 +31,8 @@ let env = PyEnv::at("./py_test");
 use py_env::PyEnv;
 
 PyEnv::at("./py_test")
-    .execute("print('hello world')");
+    .execute("print('hello world')")
+    .expect("Failed to execute code");
 ```
 
 ### Installing Python Dependencies
@@ -43,7 +44,9 @@ use py_env::PyEnv;
 
 PyEnv::at("./py_test")
     .install("numpy")
-    .execute("a = numpy.arange(15).reshape(3, 5); print(a.shape)");
+    .expect("Failed to install numpy")
+    .execute("a = numpy.arange(15).reshape(3, 5); print(a.shape)")
+    .expect("Failed to execute code");
 ```
 
 ### Making Environments Impersistent
@@ -55,7 +58,7 @@ use py_env::PyEnv;
 
 PyEnv::at("./py_test")
     .persistent(false)
-    .install("numpy");
+    .install("numpy").expect("Failed to install numpy");
 ```
 
 ## Contributing
