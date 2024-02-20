@@ -6,7 +6,27 @@ pub struct PyEnv {
     path: PathBuf,
     std_out: Box<dyn Fn() -> Stdout>,
     std_err: Box<dyn Fn() -> Stderr>,
+    persistent: bool,
 } 
+
+impl Drop for PyEnv {
+    fn drop(&mut self) {
+        if self.persistent {
+            let mut handle = std::process::Command::new("rm")
+                .args([
+                    "-rf", 
+                    self.path
+                        .as_os_str()
+                        .to_str()
+                        .unwrap()])
+                .stdout((self.std_out)())
+                .stderr((self.std_err)())
+                .spawn()
+                .expect("Error deleting directory");
+            handle.wait().unwrap();
+        }
+    }
+}
 
 impl PyEnv {
     // Constructor for piping stdout and stderr to a custom stream.
@@ -16,7 +36,7 @@ impl PyEnv {
         std_out: Box<dyn Fn() -> Stdout>,
         std_err: Box<dyn Fn() -> Stderr>,
     ) -> Self {
-        Self {path, std_out, std_err}
+        Self {path, std_out, std_err, persistent: true}
     }
 
     /// Constructor inheriting default stdout and stderr; use `new()` to customize the streams.
@@ -52,14 +72,27 @@ impl PyEnv {
         std::env::set_var("PYTHONPATH", self.path.join("site-packages"));
         let mut handle = std::process::Command::new("python")
             .args([
-            "-c",
-            code])
+                "-c",
+                code
+            ])
             .stdout((self.std_out)())
             .stderr((self.std_err)())
             .spawn()
             .expect("Error running code");
         handle.wait().unwrap();
         &self
+    }
+
+    /// Makes the environment impersistent beyond the PyEnv, deleting it upon dropping
+    pub fn make_impersistent(&mut self) -> &Self {
+        self.persistent = false;
+        self
+    }
+
+    /// Makes the environment persistent beyond the PyEnv, keeping it upon dropping (default)
+    pub fn make_persistent(&mut self) -> &Self {
+        self.persistent = true;
+        self
     }
 }
 
@@ -71,19 +104,26 @@ mod tests {
     #[test]
     fn test_install() {
         PyEnv::at(DIR)
-        .install("faker");
+            .install("faker");
     }
 
     #[test]
     fn test_run() {
         PyEnv::at(DIR)
-        .execute("print('hello world')");
+            .execute("print('hello world')");
     }
 
     #[test]
     fn test_install_run() {
         PyEnv::at(DIR)
-        .install("faker")
-        .execute("import faker; print(faker.Faker().name())");
+            .install("faker")
+            .execute("import faker; print(faker.Faker().name())");
+    }
+
+    #[test]
+    fn test_impersistence() {
+        PyEnv::at(DIR)
+            .make_impersistent()
+            .install("faker");
     }
 }

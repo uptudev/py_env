@@ -36,8 +36,18 @@ The following code installs numpy into the `./py_test` directory's site-packages
 
 ```rust
 PyEnv::at("./py_test")
+    .install("numpy")
+    .execute("a = numpy.arange(15).reshape(3, 5); print(a.shape)");
+```
+
+### Making Environments Impersistent
+
+The following code deletes the python environment off of the disk once it's done running.
+
+```rust
+PyEnv::at("./py_test")
+    .make_impersistent()
     .install("numpy");
-    .execute("a = np.arange(15).reshape(3, 5); print(a.shape)");
 ```
 
 ## Contributing
