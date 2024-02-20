@@ -20,15 +20,13 @@ This library requires no dependencies and is not on crates.io, and as such the e
 This library uses a very simple syntax to run Python scripts. To create a Python environment, simply run `PyEnv::at(PathBuf)`.
 
 ```rust
-let path = "./py_test";
-let env = PyEnv::at(path);
+let env = PyEnv::at("./py_test");
 ```
 
 ### Running Arbitrary Code
 
 ```rust
-let path = "./py_test";
-PyEnv::at(path)
+PyEnv::at("./py_test")
     .execute("print('hello world')");
 ```
 
@@ -37,8 +35,7 @@ PyEnv::at(path)
 The following code installs numpy into the `./py_test` directory's site-packages and uses it in executed code.
 
 ```rust
-let path = "./py_test";
-PyEnv::at(path)
+PyEnv::at("./py_test")
     .install("numpy");
     .execute("a = np.arange(15).reshape(3, 5); print(a.shape)");
 ```
