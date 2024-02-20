@@ -11,19 +11,8 @@ pub struct PyEnv {
 
 impl Drop for PyEnv {
     fn drop(&mut self) {
-        if self.persistent {
-            let mut handle = std::process::Command::new("rm")
-                .args([
-                    "-rf", 
-                    self.path
-                        .as_os_str()
-                        .to_str()
-                        .unwrap()])
-                .stdout((self.std_out)())
-                .stderr((self.std_err)())
-                .spawn()
-                .expect("Error deleting directory");
-            handle.wait().unwrap();
+        if !self.persistent {
+            std::fs::remove_dir_all(&self.path).unwrap();
         }
     }
 }
