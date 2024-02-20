@@ -1,6 +1,6 @@
 #![doc = include_str!("../README.md")]
 
-use std::path::PathBuf;
+use std::{io::Write, path::PathBuf};
 
 /// Error type.
 pub type Error = Box<dyn std::error::Error>;
@@ -43,8 +43,10 @@ impl PyEnv {
 
     /// Constructor inheriting default stdout and stderr; use `new()` to customize the streams.
     pub fn at(path: impl Into<PathBuf>) -> Self {
-        let std_out = |line: &str| println!("{}", line);
-        let std_err = |line: &str| eprintln!("{}", line);
+        let std_out = |line: &str| std::io::stdout().write_all(line.as_bytes())
+            .expect("Error writing line to stdout");
+        let std_err = |line: &str| std::io::stdout().write_all(line.as_bytes())
+            .expect("Error writing line to stderr");
         Self::new(path, std_out, std_err)
     }
 
