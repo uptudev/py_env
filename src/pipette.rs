@@ -1,14 +1,15 @@
 use std::io::Write;
+use std::collections::HashSet;
 
-fn rip_deps(input: &str) -> Vec<&str> {
-    let mut out: Vec<&str> = Vec::new();
+fn rip_deps(input: &str) -> HashSet<&str> {
+    let mut out: HashSet<&str> = HashSet::new();
     let mut input_words = input.split_whitespace();
     while let Some(word) = input_words.next() {
         match word {
             "import" => {
                 match input_words.next() {
                     Some(package) => {
-                        out.push(trim_syntax(package));
+                        out.insert(trim_syntax(package));
                     },
                     _ => {}
                 };
@@ -16,7 +17,7 @@ fn rip_deps(input: &str) -> Vec<&str> {
             "from" => {
                 match (input_words.next(), input_words.next(), input_words.next()) {
                     (Some(package), Some("import"), Some(_)) => {
-                        out.push(trim_syntax(package));
+                        out.insert(trim_syntax(package));
                     },
                     _ => {}
                 }
@@ -32,18 +33,23 @@ fn trim_syntax(input: &str) -> &str {
 }
 
 pub fn get_dependencies(input: &str, path: &std::path::PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let deps = rip_deps(input);
+    let mut deps = rip_deps(input);
     if deps.is_empty() {
         return Ok(());
     } 
 
     let mut stdout = std::io::stdout().lock();
-
     writeln!(stdout, "\x1b[0;1;31mWARNING\x1b[0m: dependencies not installed:")?;
 
-    for dep in deps {
+    for dep in deps.clone() {
+        let package_path = path.join(dep);
+        if package_path.exists() {
+            deps.remove(dep);
+            continue;
+        }
         writeln!(stdout, "\t{dep}")?;
     }
+
     writeln!(stdout, "")?;
     write!(stdout, "\x1b[0;35mPlease list all packages to install, delimited with spaces\x1b[0m: ")?;
     stdout.flush()?;
