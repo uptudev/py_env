@@ -14,7 +14,7 @@ A Rust library to run Python scripts and install dependencies within a given env
 Simply add the library as a dependency in your Cargo.toml as follows, and invoke via the [usage instructions](#usage).
 ```toml
 [dependencies]
-py_env = "2.0.2"
+py_env = "1.1.2"
 ```
 
 ## Usage
@@ -34,7 +34,7 @@ let env = PyEnv::new("./py_test");
 ```rust
 use py_env::PyEnv;
 
-PyEnv::new("./py_test")
+PyEnv::at("./py_test")
     .execute("print('hello world')")
     .expect("Failed to execute code");
 ```
@@ -46,8 +46,10 @@ The following code installs numpy into the `./py_test` directory's site-packages
 ```rust
 use py_env::PyEnv;
 
-PyEnv::new("./py_test")
-    .execute("import numpy; a = numpy.arange(15).reshape(3, 5); print(a.shape)")
+PyEnv::at("./py_test")
+    .install("numpy")
+    .expect("Failed to install numpy")
+    .execute("a = numpy.arange(15).reshape(3, 5); print(a.shape)")
     .expect("Failed to execute code");
 ```
 
@@ -58,8 +60,9 @@ The following code deletes the python environment off of the disk once it's done
 ```rust
 use py_env::PyEnv;
 
-PyEnv::new("./py_test")
-    .persistent(false);
+PyEnv::at("./py_test")
+    .persistent(false)
+    .install("numpy").expect("Failed to install numpy");
 ```
 
 ### Using the `try_` Unwrappers
@@ -69,9 +72,10 @@ The `try_install()` and `try_execute()` unwrapper functions panic upon errors be
 ```rust
 use py_env::PyEnv;
 
-PyEnv::new("./py_test")
+PyEnv::at("./py_test")
     .persistent(false)
-    .try_execute("import numpy; a = numpy.arange(15).reshape(3, 5); print(a.shape)");
+    .try_install("numpy")
+    .try_execute("a = numpy.arange(15).reshape(3, 5); print(a.shape)");
 ```
 
 ## Contributing
