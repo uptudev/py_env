@@ -26,7 +26,7 @@ This library uses a very simple syntax to run Python scripts. To create a Python
 ```rust
 use py_env::PyEnv;
 
-let env = PyEnv::new("./py_test");
+let env = PyEnv::at("./py_test");
 ```
 
 ### Running Arbitrary Code
