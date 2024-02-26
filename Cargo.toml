@@ -1,6 +1,10 @@
 [package]
 name = "py_env"
+<<<<<<< HEAD
 version = "1.1.2"
+=======
+version = "2.0.1"
+>>>>>>> parent of 6b3bf4d (Incremented version number and updated README)
 authors = ["uptu <uptu@uptudev>", "notdanilo <danguafer@gmail.com>"]
 edition = "2021"
 description = "A wrapper for Python commands to easily install dependencies and run Python scripts in an optionally impersistent environment."

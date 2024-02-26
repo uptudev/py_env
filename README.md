@@ -14,14 +14,14 @@ A Rust library to run Python scripts and install dependencies within a given env
 Simply add the library as a dependency in your Cargo.toml as follows, and invoke via the [usage instructions](#usage).
 ```toml
 [dependencies]
-py_env = "1.1.2"
+py_env = "2.0.1"
 ```
 
 ## Usage
 
 ### Creating a Python Environment
 
-This library uses a very simple syntax to run Python scripts. To create a Python environment, simply run `PyEnv::new(PathBuf)`.
+This library uses a very simple syntax to run Python scripts. To create a Python environment, simply run `PyEnv::at(PathBuf)`.
 
 ```rust
 use py_env::PyEnv;
