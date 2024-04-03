@@ -3,10 +3,33 @@
 use std::{io::Write, path::PathBuf};
 
 /// Error type.
-pub type Error = Box<dyn std::error::Error>;
+#[derive(Debug)]
+pub struct Error(Box<dyn std::error::Error + Send + Sync>);
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.0.source()
+    }
+
+    fn description(&self) -> &str {
+        #![allow(deprecated)]
+        self.0.description()
+    }
+
+    fn cause(&self) -> Option<&dyn std::error::Error> {
+        #![allow(deprecated)]
+        self.0.cause()
+    }
+}
 
 /// Result type with a Boxed error type, for easy chaining of errors in the PyEnv struct
-pub type PyResult<T> = Result<T, Box<dyn std::error::Error>>;
+pub type PyResult<T> = Result<T, Error>;
 
 /// A Python environment that can install packages and execute code.
 pub struct PyEnv {
@@ -50,13 +73,14 @@ impl PyEnv {
         Self::new(path, std_out, std_err)
     }
 
-    fn stream_command(&self, command: &mut std::process::Command) -> Result<bool, Box<dyn std::error::Error>> {
+    fn stream_command(&self, command: &mut std::process::Command) -> PyResult<bool> {
         use std::io::{BufReader, BufRead};
 
         let mut command = command
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped())
-            .spawn()?;
+            .spawn()
+            .map_err(|e| Error(Box::new(e)))?;
 
         command.stdout.as_mut().map(|stdout| {
             let reader = BufReader::new(stdout);
@@ -75,7 +99,7 @@ impl PyEnv {
             });
         });
 
-        let status = command.wait()?;
+        let status = command.wait().map_err(|e| Error(Box::new(e)))?;
         Ok(status.success())
     }
 
@@ -92,7 +116,7 @@ impl PyEnv {
                     .join("site-packages")
                     .as_os_str()
                     .to_str()
-                    .ok_or("Invalid path")?])
+                    .ok_or_else(|| Error("Invalid path".into()))?])
         )?;
         Ok(&self)
     }
